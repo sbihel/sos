@@ -1,5 +1,12 @@
 \documentclass{article}
 
+\usepackage{dsfont}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{stmaryrd}
+
+\usepackage{semantic}
+
 \title{SOS --- Homework}
 
 \author{Simon Bihel \and Lesly-Ann Daniel}
@@ -11,6 +18,21 @@
 
 \section*{Question 1}
 
+New \textbf{State} domain is \textbf{Var} $\rightarrow \mathds{Z}^*$?
+
+
+\inference[ARR]{(S, \sigma) \rightarrow\ (S', \sigma')}{(x[S], \sigma) \rightarrow\ (x[S'], \sigma')}
+
+\inference[NEW\_ARR]{}
+    {(x := \text{new} \text{\textit{new\_dcl}}(a), \sigma) \rightarrow
+     \sigma[x \mapsto \mathcal{B}\llbracket [i : \text{Undefined}, \forall i \in 0..a] \rrbracket]}
+
+\inference[ARR\_ASSIGN]{}
+    {(x[a_1] := a_2, \sigma) \rightarrow
+     \sigma[x \mapsto \mathcal{A}\llbracket x[a_1 : a_2] \rrbracket \sigma]}
+
+% https://cs.stackexchange.com/questions/9212/expressing-semantics-of-an-array-as-a-function
+
 \section*{Question 2}
 
 \section*{Question 3}
@@ -18,5 +40,6 @@
 \section*{Question 4}
 
 \section*{Question 5}
+
 
 \end{document}
