@@ -16,22 +16,86 @@
 \begin{document}
 \maketitle
 
-\section*{Question 1}
+\section*{Question 1 - v1}
+Let \(\mathcal{N}\) be the interpretation function for constants:
+\[ \mathcal{N} = Num \rightarrow \mathbb{Z} \]
+In our extended \texttt{While} language, values are either integers or arrays, thus we define the set of program values:
+\[ \textbf{Val} = \mathbb{Z} \cup \textbf{Arr}\]
+We define the set of arrays as the set of all functions from indexes (natural numbers) to program values, plus the value \(nil\) for undefined arrays:
+\[\textbf{Arr} = \{x:\mathbb{N} \rightarrow \textbf{Val}\} \cup \{nil\} \]
+Finally, a state is represented by a function from program variables to values:
+\[\sigma \in \textbf{State} = \textbf{Var} \rightarrow \textbf{Val} \]
 
-New \textbf{State} domain is \textbf{Var} $\rightarrow \mathds{Z}^*$?
+% New \textbf{State} domain is \textbf{Var} \(\rightarrow \mathds{Z}^*\)?
 
+Arithmetic expressions are extended from integers to integers or arrays.
+The denotational semantic of arithmetic expressions is defined by the following rules:
+\begin{center}
+\begin{tabular}{ l c l }
+\multicolumn{3}{l}{\(\mathcal{A}: \textbf{Aexp} \rightarrow \textbf{State} \rightarrow \textbf{Val}\)} \\
+ \(\mathcal{A}\llbracket n \rrbracket \sigma \) & \(=\) & \(\mathcal{N}\llbracket n \rrbracket\)\\ 
+ \(\mathcal{A}\llbracket x \rrbracket \sigma \) & \(=\) & \(\sigma x\)\\  
+ \(\mathcal{A}\llbracket a_1 \circ a_2 \rrbracket \sigma \) & \(=\) &
+    if \(\mathcal{A}\llbracket a_1\rrbracket \sigma \in \mathbb{Z}\) and \(\mathcal{A}\llbracket a_2\rrbracket \sigma \in \mathbb{Z}\)\\
+    & & then \(\mathcal{A}\llbracket a_1\rrbracket \sigma \circ \mathcal{A}\llbracket a_2\rrbracket \sigma\)\\ 
+ \(\mathcal{A}\llbracket x.length \rrbracket \sigma \) & \(=\) & if \(\sigma x \in \{\textbf{Arr} \setminus {nil}\}\) then \(|dom(\sigma x)|\) \\ 
+ \(\mathcal{A}\llbracket x[a] \rrbracket \sigma \) & \(=\) &
+    if \(\sigma x \in \{\textbf{Arr} \setminus {nil}\}\) and \(\mathcal{A}\llbracket a\rrbracket \sigma \in dom(\sigma x)\)\\
+    & & then \(\sigma x \mathcal{A}\llbracket a\rrbracket \sigma\)\\ 
+%  \(\mathcal{A}\llbracket  \rrbracket \sigma \) & \(=\) & \(\) \\ 
+%  \(\mathcal{A}\llbracket  \rrbracket \sigma \) & \(=\) & \(\) \\ 
+%  \(\mathcal{A}\llbracket  \rrbracket \sigma \) & \(=\) & \(\) \\ 
+%  \(\mathcal{A}\llbracket  \rrbracket \sigma \) & \(=\) & \(\) \\ 
+%  \(\mathcal{A}\llbracket  \rrbracket \sigma \) & \(=\) & \(\) 
+\end{tabular}
+\end{center}
+Note the following changes from the definition of the while language:
+\begin{itemize}
+\item \(\mathcal{A}\llbracket x \rrbracket \sigma \) can now return an integer or an array.
+\item \(\mathcal{A}\llbracket a_1 \circ a_2 \rrbracket \sigma \) is not defined if \(a_1\) and \(a_2\) are not integers.
+\item \(\mathcal{A}\llbracket x.length \rrbracket \sigma \) is not defined if \(x\) is an integer or the \(null\) array.
+\item \(\mathcal{A}\llbracket x.length \rrbracket \sigma \) is the cardinal of the domain of \(\sigma x\) otherwise, i.e. the number of indexes upon which the array \(x\) is defined.
+\item \(\mathcal{A}\llbracket x[a] \rrbracket \sigma \) is not defined if \(x\) is an integer or the \(null\) array. Moreover, it is only defined if the index \(a\) is in the domain of \(\sigma x\) i.e. if \(a\) is a valid index of \(x\).
+\item If \(\mathcal{A}\llbracket x[a] \rrbracket \sigma \) is defined, it first applies \(x\) to \(\sigma\) which returns the array, represented as a function. Then it does the dereferencing by applying \(\mathcal{A}\llbracket a \rrbracket \sigma\) to the array function, and returns an integer or an array.
+\end{itemize}
 
-\inference[ARR]{(S, \sigma) \rightarrow\ (S', \sigma')}{(x[S], \sigma) \rightarrow\ (x[S'], \sigma')}
+TODO bexp rule with a1 op a2
 
-\inference[NEW\_ARR]{}
-    {(x := \text{new} \text{\textit{new\_dcl}}(a), \sigma) \rightarrow
-     \sigma[x \mapsto \mathcal{B}\llbracket [i : \text{Undefined}, \forall i \in 0..a] \rrbracket]}
+The structural operational semantics (small-step) comprises all the previous rules plus the following extension:
+% \[
+% \inference[ARR\_DECL\_I]{(S, \sigma) \rightarrow\ (S', \sigma')}{(x[S], \sigma) \rightarrow\ (x[S'], \sigma')}
+% \]
+% 
+% \[
+% \inference[ARR\_DECL\_A]{(S, \sigma) \rightarrow\ (S', \sigma')}{(x[S], \sigma) \rightarrow\ (x[S'], \sigma')}
+% \]
 
+\[
+\inference[ARR\_DECL\_I]{}{(x := \text{new array[int]}(a), \sigma) \rightarrow
+      \sigma[x \mapsto x(i) = 0, \forall i \in [0 \dots a[ ]}
+\]
+
+\[
+\inference[ARR\_DECL\_A]{}{(x := \text{new array[} \text{\textit{arr\_dcl}]}(a), \sigma) \rightarrow
+      \sigma[x \mapsto x(i) = nil, \forall i \in [0 \dots a[ ]}
+\]
+
+% \[
+% \inference[NEW\_ARR]{}
+%     {(x := \text{new} \text{\textit{new\_dcl}}(a), \sigma) \rightarrow
+%      \sigma[x \mapsto \mathcal{B}\llbracket [i : \text{Undefined}, \forall i \in 0..a] \rrbracket]}
+% \]
+
+\[
 \inference[ARR\_ASSIGN]{}
     {(x[a_1] := a_2, \sigma) \rightarrow
-     \sigma[x \mapsto \mathcal{A}\llbracket x[a_1 : a_2] \rrbracket \sigma]}
-
+     \sigma[x \mapsto x[\mathcal{A}\llbracket a_1 \rrbracket \sigma \mapsto \mathcal{A}\llbracket a_1 \rrbracket \sigma]]}
+\]
+There is something wrong with this rule.
 % https://cs.stackexchange.com/questions/9212/expressing-semantics-of-an-array-as-a-function
+
+
+I think the version with one store for value and one for addresses is better. (The version they use in any semantic paper.)
 
 \section*{Question 2}
 
