@@ -21,6 +21,7 @@
 \maketitle
 
 \section*{Question 1 - v1}
+%------------------------ Part 1
 Let \(\mathcal{N}\) be the interpretation function for constants:
 \[ \mathcal{N} = Num \rightarrow \mathbb{Z} \]
 In our extended \texttt{While} language, values are either integers or arrays, thus we define the set of program values:
@@ -30,8 +31,7 @@ We define the set of arrays as the set of all functions from indexes (natural nu
 Finally, a state is represented by a function from program variables to values:
 \[\sigma \in \textbf{State} = \textbf{Var} \rightarrow \textbf{Val} \]
 
-% New \textbf{State} domain is \textbf{Var} \(\rightarrow \mathds{Z}^*\)?
-
+%------------------------ Part 2
 Arithmetic expressions are extended from integers to integers or arrays.
 The denotational semantic of arithmetic expressions is defined by the following rules:
 \begin{center}
@@ -45,12 +45,7 @@ The denotational semantic of arithmetic expressions is defined by the following 
  \(\mathcal{A}\llbracket x.length \rrbracket \sigma \) & \(=\) & if \(\sigma x \in \{\textbf{Arr} \setminus {nil}\}\) then \(|dom(\sigma x)|\) \\ 
  \(\mathcal{A}\llbracket x[a] \rrbracket \sigma \) & \(=\) &
     if \(\sigma x \in \{\textbf{Arr} \setminus {nil}\}\) and \(\mathcal{A}\llbracket a\rrbracket \sigma \in dom(\sigma x)\)\\
-    & & then \(\sigma x \mathcal{A}\llbracket a\rrbracket \sigma\)\\ 
-%  \(\mathcal{A}\llbracket  \rrbracket \sigma \) & \(=\) & \(\) \\ 
-%  \(\mathcal{A}\llbracket  \rrbracket \sigma \) & \(=\) & \(\) \\ 
-%  \(\mathcal{A}\llbracket  \rrbracket \sigma \) & \(=\) & \(\) \\ 
-%  \(\mathcal{A}\llbracket  \rrbracket \sigma \) & \(=\) & \(\) \\ 
-%  \(\mathcal{A}\llbracket  \rrbracket \sigma \) & \(=\) & \(\) 
+    & & then \(\sigma x (\mathcal{A}\llbracket a\rrbracket \sigma)\)
 \end{tabular}
 \end{center}
 Note the following changes from the definition of the while language:
@@ -63,44 +58,53 @@ Note the following changes from the definition of the while language:
 \item If \(\mathcal{A}\llbracket x[a] \rrbracket \sigma \) is defined, it first applies \(x\) to \(\sigma\) which returns the array, represented as a function. Then it does the dereferencing by applying \(\mathcal{A}\llbracket a \rrbracket \sigma\) to the array function, and returns an integer or an array.
 \end{itemize}
 
-TODO bexp rule with a1 op a2
+The denotational semantic of boolean expressions is defined by the following rules:
+\begin{center}
+\begin{tabular}{ l c l }
+\multicolumn{3}{l}{\(\mathcal{B}: \textbf{Bexp} \rightarrow \textbf{State} \rightarrow \mathbb{B}\)} \\
+ \(\mathcal{B}\llbracket true \rrbracket \sigma \) & \(=\) & \(\textbf{tt}\)\\ 
+ \(\mathcal{B}\llbracket false \rrbracket \sigma \) & \(=\) & \(\textbf{ff}\)\\  
+ \(\mathcal{B}\llbracket a_1 \circ a_2 \rrbracket \sigma \) & \(=\) &
+    if \(\mathcal{A}\llbracket a_1\rrbracket \sigma \in \mathbb{Z}\) and \(\mathcal{A}\llbracket a_2\rrbracket \sigma \in \mathbb{Z}\)\\
+    & & then \(\mathcal{A}\llbracket a_1\rrbracket \sigma \circ \mathcal{A}\llbracket a_2\rrbracket \sigma\)\\ 
+ \(\mathcal{B}\llbracket \text{not } b \rrbracket \sigma \) & \(=\) & \(\neg(\mathcal{B}\llbracket b \rrbracket \sigma)\) \\
+ \(\mathcal{B}\llbracket b_1 \text{ and } b_2 \rrbracket \sigma \) & \(=\) &
+    \((\mathcal{B}\llbracket b_1 \rrbracket \sigma) \wedge (\mathcal{B}\llbracket b_2 \rrbracket \sigma)\) \\
+ \(\mathcal{B}\llbracket b_1 \text{ or } b_2 \rrbracket \sigma \) & \(=\) &
+    \((\mathcal{B}\llbracket b_1 \rrbracket \sigma) \vee (\mathcal{B}\llbracket b_2 \rrbracket \sigma)\) \\
+\end{tabular}
+\end{center}
+Note that  \(\mathcal{B}\llbracket a_1 \circ a_2 \rrbracket \sigma \) is not defined if \(a_1\) and \(a_2\) are not integers.
+Consequently, some rules parameterized by booleans expressions in the small-step semantic might be blocking on undefined booleans expressions.
 
 The structural operational semantics (small-step) comprises all the previous rules plus the following extension:
-% \[
-% \inference[ARR\_DECL\_I]{(S, \sigma) \rightarrow\ (S', \sigma')}{(x[S], \sigma) \rightarrow\ (x[S'], \sigma')}
-% \]
-% 
-% \[
-% \inference[ARR\_DECL\_A]{(S, \sigma) \rightarrow\ (S', \sigma')}{(x[S], \sigma) \rightarrow\ (x[S'], \sigma')}
-% \]
-
 \[
 \inference[ARR\_DECL\_I]{}{(x := \text{new array[int]}(a), \sigma) \rightarrow
       \sigma[x \mapsto x(i) = 0, \forall i \in [0 \dots a[ ]}
 \]
-
 \[
 \inference[ARR\_DECL\_A]{}{(x := \text{new array[} \text{\textit{arr\_dcl}]}(a), \sigma) \rightarrow
       \sigma[x \mapsto x(i) = nil, \forall i \in [0 \dots a[ ]}
 \]
-
-% \[
-% \inference[NEW\_ARR]{}
-%     {(x := \text{new} \text{\textit{new\_dcl}}(a), \sigma) \rightarrow
-%      \sigma[x \mapsto \mathcal{B}\llbracket [i : \text{Undefined}, \forall i \in 0..a] \rrbracket]}
-% \]
-
 \[
-\inference[ARR\_ASSIGN]{\mathcal{A}\llbracket a_1\rrbracket \sigma \in dom(\sigma x)}
+\inference[ARR\_UPDATE]{}
     {(x[a_1] := a_2, \sigma) \rightarrow
      \sigma[x \mapsto \sigma x[\mathcal{A}\llbracket a_1 \rrbracket \sigma \mapsto \mathcal{A}\llbracket a_2 \rrbracket \sigma]]}
+     [if \(\mathcal{A}\llbracket a_1\rrbracket \sigma \in dom(\sigma x)\)]
 \]
-% https://cs.stackexchange.com/questions/9212/expressing-semantics-of-an-array-as-a-function
+The array declaration is split into two rules:
+\begin{itemize}
+ \item \textsc{Arr\_Decl\_I} is the declaration of arrays of integers. The arrays \(x\) is initialized as a function mapping indexes (from 0 to \(a\)), to 0.
+ \item \textsc{Arr\_Decl\_A} is the declaration of arrays of arrays. The arrays \(x\) is initialized as a function mapping indexes (from 0 to \(a\)), to \(nil\).
+\end{itemize}
+The \textsc{Arr\_Update} is conditioned by the fact that the index \(a_1\) is in the bound of the array. \textsc{Arr\_Update} consists in updating the function \(\sigma x\) by mapping the index \(a_1\) to its new value \(a_2\), and then updating the store \(\sigma\) with the new value of \(\sigma x\).
 
-
-I think the version with one store for value and one for addresses is better. (The version they use in any semantic paper.)
 
 \section*{Question 2}
+The definition of the big-step semantic would not change, except for the addition of the above rules that would be straightforward.
+Indeed, the rules defined above do not manipulate commands, so their translation into big-step semantic only consists in changing the transition relation from small-step to big-step.
+
+There would be more blocking configurations because some rules of the big step-semantic are parameterized by a boolean evaluation which can be undefined (to avoid the comparison of arrays) in our extended semantic contrary to the original semantic.
 
 \section*{Question 3}
 
