@@ -107,6 +107,70 @@ Indeed, the rules defined above do not manipulate commands, so their translation
 There would be more blocking configurations because some rules of the big step-semantic are parameterized by a boolean evaluation which can be undefined (to avoid the comparison of arrays) in our extended semantic contrary to the original semantic.
 
 \section*{Question 3}
+% Question 3. We suppose that all instructions are given a unique label. Propose a data-flow analysis for
+% determining the potential may-aliases at each program point. You may want to use the allocation site of
+% an array as abstraction but other abstract domains for modeling memory allocation are also welcome. The
+% allocation site of an array is the label of the new instruction that created it.
+
+We enrich the syntax of the \texttt{While} language with labels:
+\begin{equation*} \label{eq1}
+\begin{split}
+S::= & [x := a]^l
+     \ |\ [\text{skip}]^l
+     \ |\ S_1;S_2
+     \ |\ \text{if } [b]^l \text{ then } S_1 \text{ else } S_2 
+     \ |\ \text{while } [b]^l \text{ do } S \ |\\
+     & [x := \text{new } arr\_decl(a)]^l
+     \ |\ [x[a_1] := a_2]^l\\
+& n \in \textbf{Num}, x \in \textbf{Var}, a \in \textbf{Aexp}, b \in \textbf{Bexp}, S \in \textbf{Comm}, l \in \textbf{Lab}
+\end{split}
+\end{equation*}
+
+For each instruction \(S \in \textbf{Comm}\), we associate:
+\begin{center}
+\begin{tabular}{ l l l }
+\(init(S)\) & \(\in \textbf{Lab}\) &  \textit{the entry point label of S}\\
+\(final(S)\) & \(\subseteq \textbf{Lab}\) &  \textit{the exit point labels of S}\\
+\(labels(S)\) & \(\subseteq \textbf{Lab}\) &  \textit{the labels which appear in S}\\
+\(flow(S)\) & \(\subseteq \textbf{Lab} \times \textbf{Lab}\) &  \textit{the edged of the control flow graph}
+\end{tabular}
+\end{center}
+\todo{define those functions for the new (and old?) commands.}
+
+An allocation is represented by a couple \((v,l) \in \textbf{Var} \times \textbf{Lab}^\textbf{?}\)
+with \(\textbf{Lab}^\textbf{?} = \textbf{Lab} \cup \{?\}\).
+\begin{itemize}
+ \item \((v,l)\) : The array \(v\) has been allocated a program point \(l\).
+ \item (v,?) : The array \(v\) is not allocated.
+\end{itemize}
+At each label l, we compute the two sets:
+\begin{itemize}
+ \item \(R\!D_\text{in}(l)\), the allocated arrays that enter in \(l\)
+ \item \(R\!D_\text{in}(l)\), the allocated arrays that exit from \(l\)
+\end{itemize}
+
+The Gen-kill rules for the MA analysis are the following:
+\begin{center}
+\begin{tabular}{ l l l l}
+\( kill([x := a]^l) \)      & = & \( \{(x,l')\ |\ l' \in \textbf{Lab}^?\} \) & \textit{kill any previous alloc. of x}\\ 
+\( kill([\text{skip}]^l) \) & = & \( \emptyset \) \\
+\( kill([b]^l) \)           & = & \( \emptyset \) \\
+\( kill([x := \text{new } arr\_decl(a)]^l) \) & = & \( \{(x,l')\ |\ l' \in \textbf{Lab}^?\} \) & \textit{kill any previous alloc. of x}\\ 
+\( kill([x[a_1] := a_2]^l) \) & = & \(\emptyset\)
+\end{tabular}
+\end{center}
+\begin{center}
+\begin{tabular}{ l l l l}
+\( gen([x := a]^l) \)      & = & \( \emptyset \) \\ 
+\( gen([\text{skip}]^l) \) & = & \( \emptyset \) \\
+\( gen([b]^l) \)           & = & \( \emptyset \) \\
+\( gen([x := \text{new } arr\_decl(a)]^l) \) & = & \( \{(x,l)\} \) & \textit{create new alloc. for x}\\ 
+\( gen([x[a_1] := a_2]^l) \) & = & \(\emptyset\)
+\end{tabular}
+\end{center}
+
+\todo{Define MAin and MAout.}
+
 
 \section*{Question 4}
 
