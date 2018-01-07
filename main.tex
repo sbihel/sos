@@ -4,8 +4,12 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{stmaryrd}
-
 \usepackage{semantic}
+\usepackage{xcolor}
+
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{ToDo}\ifx&#1&\else ~[\emph{#1} ]~\fi}}
+\newcommand{\fixme}[1]{\textcolor{purple}{\textbf{FixMe}\ifx&#1&\else ~[ \emph{#1} ]~\fi}}
+\newcommand{\note}[1]{\textcolor{blue}{\textbf{Note}\ifx&#1&\else ~[ \emph{#1} ]~\fi}}
 
 \title{SOS --- Homework}
 
@@ -21,7 +25,7 @@ Let \(\mathcal{N}\) be the interpretation function for constants:
 \[ \mathcal{N} = Num \rightarrow \mathbb{Z} \]
 In our extended \texttt{While} language, values are either integers or arrays, thus we define the set of program values:
 \[ \textbf{Val} = \mathbb{Z} \cup \textbf{Arr}\]
-We define the set of arrays as the set of all functions from indexes (natural numbers) to program values, plus the value \(nil\) for undefined arrays:
+We define the set of arrays as the set of all functions from indexes (natural numbers) to program values, plus the value \(nil\) for undefined arrays: \note{We could define the set of array as the set of finite sequences of values, it might be more readable/easier to understand...}
 \[\textbf{Arr} = \{x:\mathbb{N} \rightarrow \textbf{Val}\} \cup \{nil\} \]
 Finally, a state is represented by a function from program variables to values:
 \[\sigma \in \textbf{State} = \textbf{Var} \rightarrow \textbf{Val} \]
@@ -87,11 +91,10 @@ The structural operational semantics (small-step) comprises all the previous rul
 % \]
 
 \[
-\inference[ARR\_ASSIGN]{}
+\inference[ARR\_ASSIGN]{\mathcal{A}\llbracket a_1\rrbracket \sigma \in dom(\sigma x)}
     {(x[a_1] := a_2, \sigma) \rightarrow
-     \sigma[x \mapsto x[\mathcal{A}\llbracket a_1 \rrbracket \sigma \mapsto \mathcal{A}\llbracket a_1 \rrbracket \sigma]]}
+     \sigma[x \mapsto \sigma x[\mathcal{A}\llbracket a_1 \rrbracket \sigma \mapsto \mathcal{A}\llbracket a_2 \rrbracket \sigma]]}
 \]
-There is something wrong with this rule.
 % https://cs.stackexchange.com/questions/9212/expressing-semantics-of-an-array-as-a-function
 
 
