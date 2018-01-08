@@ -86,11 +86,11 @@ Consequently, some rules parameterized by booleans expressions in the small-step
 The structural operational semantics (small-step) comprises all the previous rules plus the following extension:
 \[
 \inference[ARR\_DECL\_I]{}{(x := \text{new array[int]}(a), \sigma) \rightarrow
-      \sigma[x \mapsto x(i) = 0, \forall i \in [0 \dots a[ ]}
+\sigma[x \mapsto x(i) = 0, \forall i \in [0 .. (a-1)] ]}
 \]
 \[
 \inference[ARR\_DECL\_A]{}{(x := \text{new array[} \text{\textit{arr\_dcl}]}(a), \sigma) \rightarrow
-      \sigma[x \mapsto x(i) = nil, \forall i \in [0 \dots a[ ]}
+\sigma[x \mapsto x(i) = nil, \forall i \in [0 .. (a-1)] ]}
 \]
 \[
 \inference[ARR\_UPDATE]{}
@@ -100,8 +100,8 @@ The structural operational semantics (small-step) comprises all the previous rul
 \]
 The array declaration is split into two rules:
 \begin{itemize}
- \item \textsc{Arr\_Decl\_I} is the declaration of arrays of integers. The arrays \(x\) is initialized as a function mapping indexes (from 0 to \(a\)), to 0.
- \item \textsc{Arr\_Decl\_A} is the declaration of arrays of arrays. The arrays \(x\) is initialized as a function mapping indexes (from 0 to \(a\)), to \(nil\).
+ \item \textsc{Arr\_Decl\_I} is the declaration of arrays of integers. The arrays \(x\) is initialized as a function mapping indexes (from 0 to \(a-1\)), to 0.
+ \item \textsc{Arr\_Decl\_A} is the declaration of arrays of arrays. The arrays \(x\) is initialized as a function mapping indexes (from 0 to \(a-1\)), to \(nil\).
 \end{itemize}
 The \textsc{Arr\_Update} is conditioned by the fact that the index \(a_1\) is in the bound of the array. \textsc{Arr\_Update} consists in updating the function \(\sigma x\) by mapping the index \(a_1\) to its new value \(a_2\), and then updating the store \(\sigma\) with the new value of \(\sigma x\).
 
