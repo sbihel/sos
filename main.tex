@@ -6,6 +6,12 @@
 \usepackage{stmaryrd}
 \usepackage{semantic}
 \usepackage{xcolor}
+\usepackage{listings}
+\lstset{
+basicstyle=\ttfamily,
+frame=single,
+numbers=left
+}
 
 \newcommand{\todo}[1]{\textcolor{red}{\textbf{ToDo}\ifx&#1&\else ~[\emph{#1} ]~\fi}}
 \newcommand{\fixme}[1]{\textcolor{purple}{\textbf{FixMe}\ifx&#1&\else ~[ \emph{#1} ]~\fi}}
@@ -135,7 +141,54 @@ For each instruction \(S \in \textbf{Comm}\), we associate:
 \(flow(S)\) & \(\subseteq \textbf{Lab} \times \textbf{Lab}\) &  \textit{the edged of the control flow graph}
 \end{tabular}
 \end{center}
-\todo{define those functions for the new (and old?) commands.}
+which are defined as follow:
+\begin{center}
+\begin{tabular}{ l l }
+\( init([x := a]^l) \)                                           & \( = l\)\\
+\( init([\text{skip}]^l) \)                                      & \( = l\)\\
+\( init(S_1;S_2) \)                                              & \( = init(S_1)\)\\
+\( init(\text{if } [b]^l \text{ then } S_1 \text{ else } S_2) \) & \( = l\)\\
+\( init(\text{while } [b]^l \text{ do } S) \)                    & \( = l\)\\
+\( init([x := \text{new } arr\_decl(a)]^l) \)                    & \( = l\)\\
+\( init([x[a_1] := a_2]^l) \)                                    & \( = l\)
+\end{tabular}
+\end{center}
+\begin{center}
+\begin{tabular}{ l l }
+\( final([x := a]^l) \)                                           & \( = \{l\}\)\\
+\( final([\text{skip}]^l) \)                                      & \( = \{l\}\)\\
+\( final(S_1;S_2) \)                                              & \( = final(S_2)\)\\
+\( final(\text{if } [b]^l \text{ then } S_1 \text{ else } S_2) \) & \( = final(S_1) \cup final(S_2)\)\\
+\( final(\text{while } [b]^l \text{ do } S) \)                    & \( = \{l\}\)\\
+\( final([x := \text{new } arr\_decl(a)]^l) \)                    & \( = \{l\}\)\\
+\( final([x[a_1] := a_2]^l) \)                                    & \( = \{l\}\)
+\end{tabular}
+\end{center}
+\begin{center}
+\begin{tabular}{ l l }
+\( labels([x := a]^l) \)                                           & \( = \{l\}\)\\
+\( labels([\text{skip}]^l) \)                                      & \( = \{l\}\)\\
+\( labels(S_1;S_2) \)                                              & \( = labels(S_1) \cup labels(S_2)\)\\
+\( labels(\text{if } [b]^l \text{ then } S_1 \text{ else } S_2) \) & \( = \{l\} \cup labels(S_1) \cup labels(S_2)\)\\
+\( labels(\text{while } [b]^l \text{ do } S) \)                    & \( = \{l\} \cup labels(S)\)\\
+\( labels([x := \text{new } arr\_decl(a)]^l) \)                    & \( = \{l\}\)\\
+\( labels([x[a_1] := a_2]^l) \)                                    & \( = \{l\}\)
+\end{tabular}
+\end{center}
+\begin{center}
+\begin{tabular}{ l l }
+\( flow([x := a]^l) \)                                           & \( = \emptyset \)\\
+\( flow([\text{skip}]^l) \)                                      & \( = \emptyset \)\\
+\( flow(S_1;S_2) \)                                              &
+    \( = flow(S_1) \cup flow(S_2) \cup \{(l,init(S_2))\ |\ l \in final(S_1)\}\)\\
+\( flow(\text{if } [b]^l \text{ then } S_1 \text{ else } S_2) \) &
+    \( = flow(S_1) \cup flow(S_2) \cup \{(l,init(S_1))\} \cup \{(l,init(S_2))\}\)\\
+\( flow(\text{while } [b]^l \text{ do } S) \)                    &
+    \( = flow(S) \cup \{(l',l)\ |\ l' \in final(S)\} \cup \{(l,init(S))\}\)\\
+\( flow([x := \text{new } arr\_decl(a)]^l) \)                    & \( = \emptyset \)\\
+\( flow([x[a_1] := a_2]^l) \)                                    & \( = \emptyset \)\\
+\end{tabular}
+\end{center}
 
 An allocation is represented by a couple \((v,l) \in \textbf{Var} \times \textbf{Lab}^\textbf{?}\)
 with \(\textbf{Lab}^\textbf{?} = \textbf{Lab} \cup \{?\}\).
@@ -145,11 +198,11 @@ with \(\textbf{Lab}^\textbf{?} = \textbf{Lab} \cup \{?\}\).
 \end{itemize}
 At each label l, we compute the two sets:
 \begin{itemize}
- \item \(R\!D_\text{in}(l)\), the allocated arrays that enter in \(l\)
- \item \(R\!D_\text{in}(l)\), the allocated arrays that exit from \(l\)
+ \item \(M\!A_\text{in}(l)\), the allocated arrays that enter in \(l\)
+ \item \(M\!A_\text{out}(l)\), the allocated arrays that exit from \(l\)
 \end{itemize}
 
-The Gen-kill rules for the MA analysis are the following:
+The ``gen-kill'' rules for the MA analysis are the following:
 \begin{center}
 \begin{tabular}{ l l l l}
 \( kill([x := a]^l) \)      & = & \( \{(x,l')\ |\ l' \in \textbf{Lab}^?\} \) & \textit{kill any previous alloc. of x}\\ 
@@ -160,19 +213,55 @@ The Gen-kill rules for the MA analysis are the following:
 \end{tabular}
 \end{center}
 \begin{center}
-\begin{tabular}{ l l l l}
-\( gen([x := a]^l) \)      & = & \( \emptyset \) \\ 
-\( gen([\text{skip}]^l) \) & = & \( \emptyset \) \\
-\( gen([b]^l) \)           & = & \( \emptyset \) \\
-\( gen([x := \text{new } arr\_decl(a)]^l) \) & = & \( \{(x,l)\} \) & \textit{create new alloc. for x}\\ 
-\( gen([x[a_1] := a_2]^l) \) & = & \(\emptyset\)
+\begin{tabular}{ l l l }
+\( gen([x_1 := x_2]^l) \)    & =  \( (x_1,l')\ |\ (x_2,l') \in  M\!A_\text{in}(l) \)
+                             & \textit{add any allocation reachable via \(x_2\) }\\
+\( gen([x_1 := x_2[a]]^l) \) & =  \( (x_1,l')\ |\ (x_2,l') \in  M\!A_\text{in}(l) \)
+                             & \textit{add any allocation reachable via \(x_2\) }\\ 
+\( gen([x := a]^l) \)        & =  \( \emptyset \)
+                             & \textit{if \(a_2\) is not a variable}\\ 
+\( gen([\text{skip}]^l) \)   & =  \( \emptyset \) \\
+\( gen([b]^l) \)             & =  \( \emptyset \) \\
+
+\( gen([x := \text{new } arr\_decl(a)]^l) \) & =  \( \{(x,l)\} \) & \textit{create new alloc. for x}\\
+
+\( gen([x_1[a] := x_2]^l) \)        & =  \( (x_1,l')\ |\ (x_2,l') \in  M\!A_\text{in}(l) \)
+                                    & \textit{add any allocation reachable via \(x_2\) }\\
+\( gen([x_1[a_1] := x_2[a_2]]^l) \) & =  \( (x_1,l')\ |\ (x_2,l') \in  M\!A_\text{in}(l) \)
+                                    & \textit{add any allocation reachable via \(x_2\) }\\ 
+\( gen([x[a_1] := a_2]^l) \)        & =  \( \emptyset \)
+                                    & \textit{if \(a_2\) is not a variable}\\
 \end{tabular}
 \end{center}
 
-\todo{Define MAin and MAout.}
-
+For all program point \([i]^l \in P\), we compute the sets \(M\!A_\text{in}(l)\) and \(M\!A_\text{out}(l)\):
+ \[
+    M\!A_\text{in}(l) =
+    \begin{cases}
+      \{(x,?)\ |\ x \in \textbf{Var}\},                        & \text{if } l=init(P)\\
+      \bigcup\limits_{(l,l') \in flow(P)} M\!A_\text{out}(l'), & \text{otherwise}
+    \end{cases}
+\]
+\[
+    M\!A_\text{out}(l) = M\!A_\text{in}(l) \setminus kill([i]^l) \cup gen([i]^l)
+\]
 
 \section*{Question 4}
+Imprecisions:
+
+Conditional statements, because unreachable 
+\begin{lstlisting}
+if(x < 0)
+  x = new array[int](10)
+if(x > 0)
+  y = x // Triggers a may alias but actually there is none.
+\end{lstlisting}
+
+We do not differentiate allocations reachable via \(x\) and allocations reachable via \(x[i]\), in both case, we add the allocation as \((x,l)\).
+Moreover in case of an assignment \([x_1 := x_2[a]]^l\) where \(x_2\) is an array of integers, we add its reachable expressions to \(x_1\) although it is not necessary.
+This constitutes an over-approximation in the analysis.
+
+Updating an array with a reference: \( kill([x[a_1] := a_2]^l) \)  might override an allocation labeled l, which is no longer reachable via x, but we cannot know so we keep (x,l) in the list.
 
 \section*{Question 5}
 
