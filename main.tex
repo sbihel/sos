@@ -277,15 +277,31 @@ T  & ::= \text{Bool}\ |\ \text{Cmd}\ |\ T'
 \end{equation*}
 
 \paragraph{Guarantees}
-\todo{What we guarantee:}
+The typing rules are constructive and guarantee that the type of variables cannot change.
+If there exists a \(\Gamma\) such that the program is well-typed, the following properties are guaranteed on its execution:
+\begin{itemize}
+ \item The rule \textsc{T-AOp} guarantees that an arithmetic operation can only be applied on integers and not on arrays.
+ \item The rule \textsc{T-Len} guarantees that the \texttt{length} operator can only be applied to arrays. It does not guarantee that the reference is not \(nil\), for instance in the program in Listing \ref{code:nilderef}.
+ \item The rule \textsc{T-Deref} guarantees that only arrays can be dereferenced and only with an integer. It does not guarantee that the reference is not \(nil\) and that the access lies within the bounds of the array.
+ \item The rule \textsc{T-Comp} guarantees that only integers can be compared.
+ \item The rule \textsc{T-Assign} guarantees that the type of the variables cannot change, and that only expressions with the same type as the variable can be assigned. 
+ \item The rule \textsc{T-ADecl} guarantees that the size of the allocated array is an integer.
+ \item The rule \textsc{T-AUpdate} guarantees that the variables dereferenced is an array and that both side of the assignment have the same type. It does not guarantee that the reference is not \(nil\) and that the access lies within the bounds of the array.
+\end{itemize}
 
+\begin{lstlisting}[caption=Example of program dereferencing a nil reference., label=code:nilderef]
+x := new array[array[int]](10);// x : Array[Array[Nat]]
+y := x[3];                     // y : Array[Nat]
+z := y.length                  // Error because y = nil
 
-What we do not guarantee:
-We cannot guarantee a non blocking execution if the program is well typed because we chose to initialize arrays of arrays to \(nil\).
-It is not possible to guarantee that a reference is not \(nil\) with a type system. This would require a static analysis dataflow analysis.
-Therefore we cannot guarantee that the program does not try to dereference a \(nil\) reference, we only check this at runtime in the Aexp evaluation and then block the execution.
+\end{lstlisting}
 
-Even if we choose to initialize arrays of arrays directly (\texttt{new array[array[int]](10)} would then return an \(10 \times 10\) array), and to not consider \(nil\) references, we would not have the guarantee that the program is non blocking because we cannot guarantee the absence of  array overflows or underflows. This guarantee would also require a dataflow analysis.
+We cannot guarantee that a well-typed program is non-blocking.
+The first reason is because we initialize arrays of arrays to \(nil\) and it is not possible to guarantee that a reference is not \(nil\) with a type system, it would require a dataflow analysis.
+Therefore we cannot guarantee that the program does not try to dereference a variables set to \(nil\). This check is only performed at runtime in the evaluation of arithmetic expressions and then the execution is  blocked.
+
+The second reason is that we cannot guarantee the absence of  array overflows or underflows, providing this guarantee would also require a dataflow analysis.
+Therefore, even if we choose to not consider \(nil\) references and initialize arrays of arrays directly (\texttt{new array[array[int]](10)} would then return an \(10 \times 10\) array), we could not have the guarantee that the program is non blocking.
 
 \paragraph{Typing Rules}
 We define the type judgment \(\Gamma \vdash S\) meaning that the command \(S\) is well-typed in the context \(\Gamma\) with the following typing rules:
@@ -308,7 +324,7 @@ Then, the typing rules for arithmetic expressions:
     {\Gamma \vdash x : t}{}
 \]
 \[
-\inference[\textsc{T-Aop}]
+\inference[\textsc{T-AOp}]
     {\Gamma \vdash a_1 : \text{Nat} \quad \Gamma \vdash a_2 : \text{Nat}}
     {\Gamma \vdash a_1 \circ a_2 : \text{Nat}}{(\circ \in \{+, -,\times\})}
 \]
