@@ -12,6 +12,8 @@ basicstyle=\ttfamily,
 frame=single,
 numbers=left
 }
+\usepackage{fullpage}
+\usepackage{mathpartir}
 
 \newcommand{\todo}[1]{\textcolor{red}{\textbf{ToDo}\ifx&#1&\else ~[\emph{#1} ]~\fi}}
 \newcommand{\fixme}[1]{\textcolor{purple}{\textbf{FixMe}\ifx&#1&\else ~[ \emph{#1} ]~\fi}}
@@ -84,20 +86,18 @@ Note that  \(\mathcal{B}\llbracket a_1 \circ a_2 \rrbracket \sigma \) is not def
 Consequently, some rules parameterized by booleans expressions in the small-step semantic might be blocking on undefined booleans expressions.
 
 The structural operational semantics (small-step) comprises all the previous rules plus the following extension:
-\[
+\begin{mathpar}
 \inference[ARR\_DECL\_I]{}{(x := \text{new array[int]}(a), \sigma) \rightarrow
 \sigma[x \mapsto x(i) = 0, \forall i \in [0 .. (a-1)] ]}
-\]
-\[
+\and
 \inference[ARR\_DECL\_A]{}{(x := \text{new array[} \text{\textit{arr\_dcl}]}(a), \sigma) \rightarrow
 \sigma[x \mapsto x(i) = nil, \forall i \in [0 .. (a-1)] ]}
-\]
-\[
+\and
 \inference[ARR\_UPDATE]{}
     {(x[a_1] := a_2, \sigma) \rightarrow
      \sigma[x \mapsto \sigma x[\mathcal{A}\llbracket a_1 \rrbracket \sigma \mapsto \mathcal{A}\llbracket a_2 \rrbracket \sigma]]}
      [if \(\mathcal{A}\llbracket a_1\rrbracket \sigma \in dom(\sigma x)\)]
-\]
+\end{mathpar}
 The array declaration is split into two rules:
 \begin{itemize}
  \item \textsc{Arr\_Decl\_I} is the declaration of arrays of integers. The arrays \(x\) is initialized as a function mapping indexes (from 0 to \(a-1\)), to 0.
@@ -291,110 +291,93 @@ Even if we choose to initialize arrays of arrays directly (\texttt{new array[arr
 We define the type judgment \(\Gamma \vdash S\) meaning that the command \(S\) is well-typed in the context \(\Gamma\) with the following typing rules:
 
 First we define the typing rules for values:
-\[
+\begin{mathpar}
 \textsc{T-Nat} \quad \Gamma \vdash n : \text{Nat}
-\]
-\[
+\and
 \textsc{T-True} \quad \Gamma \vdash true : \text{Bool}
-\]
-\[
+\and
 \textsc{T-False} \quad \Gamma \vdash false : \text{Bool} 
-\]
+\end{mathpar}
 
 Then, the typing rules for arithmetic expressions:
-\[
+\begin{mathpar}
 \inference[\textsc{T-Var}]
     {x : t \in \Gamma}
     {\Gamma \vdash x : t}{}
-\]
-\[
+\and
 \inference[\textsc{T-Aop}]
     {\Gamma \vdash a_1 : \text{Nat} \quad \Gamma \vdash a_2 : \text{Nat}}
     {\Gamma \vdash a_1 \circ a_2 : \text{Nat}}{(\circ \in \{+, -,\times\})}
-\]
-\[
+\and
 \inference[\textsc{T-Len}]
     {x : \text{Array}[t] \in \Gamma}
     {\Gamma \vdash x.length : \text{Nat}}{}
-\]
-\[
+\and
 \inference[\textsc{T-Deref}]
     {x : \text{Array}[t] \in \Gamma \quad \Gamma \vdash a : \text{Nat}}
     {\Gamma \vdash  x[a] : t}{}
-\]
+\end{mathpar}
 
 Then the typing rules for boolean expressions:
 
-\[
+\begin{mathpar}
 \inference[\textsc{T-Comp}]
     {\Gamma \vdash a_1 : \text{Nat} \quad \Gamma \vdash a_2 : \text{Nat}}
     {\Gamma \vdash a_1 \circ a_2 : \text{Bool}}{(\circ \in \{=, \leq\})}
-\]
-\[
+\and
 \inference[\textsc{T-Not}]
     {\Gamma \vdash b : \text{Bool}}
     {\Gamma \vdash \texttt{not } b : \text{Bool}}{}
-\]
-\[
+\and
 \inference[\textsc{T-Or}]
     {\Gamma \vdash b_1 : \text{Bool} \quad \Gamma \vdash b_2 : \text{Bool}}
     {\Gamma \vdash  b_1 \texttt{ or } b_2 : \text{Bool}}{}
-\]
-\[
+\and
 \inference[\textsc{T-And}]
     {\Gamma \vdash b_1 : \text{Bool} \quad \Gamma \vdash b_2 : \text{Bool}}
     {\Gamma \vdash  b_1 \texttt{ and } b_2 : \text{Bool}}{}
-\]
+\end{mathpar}
 
 Finally, we define the typing rules for commands:
-\[
+\begin{mathpar}
 \inference[\textsc{T-Assign}]
     {x : t \in \Gamma \quad \Gamma \vdash a : t}
     {\Gamma \vdash  x := a : \text{Cmd}}{}
-\]
-\[
+\and
 \inference[\textsc{T-Skip}]
     {}
     {\Gamma \vdash \texttt{skip} : \text{Cmd}}{}
-\]
-\[
+\and
 \inference[\textsc{T-Seq}]
     {\Gamma \vdash S_1 : \text{Cmd} \quad \Gamma \vdash S_2 : \text{Cmd}}
     {\Gamma \vdash S_1; S_2 : \text{Cmd}}{}
-\]
-\[
+\and
 \inference[\textsc{T-If}]
     {\Gamma \vdash b : Bool \quad \Gamma \vdash S_1 : \text{Cmd} \quad \Gamma \vdash S_2 : \text{Cmd}}
     {\Gamma \vdash \texttt{if } b \texttt{ then } S_1 \texttt{ else } S_2 : \text{Cmd}}{}
-\]
-\[
+\and
 \inference[\textsc{T-While}]
     {\Gamma \vdash b : Bool \quad \Gamma \vdash S : \text{Cmd}}
     {\Gamma \vdash \texttt{while } b \texttt{ do } S : \text{Cmd}}{}
-\]
-% \[
+% \and
 % \inference[\textsc{T-ADecl-Int}]
 %     {x : \text{Array}[int] \in \Gamma \quad \Gamma \vdash a : \text{Nat}}
 %     {\Gamma \vdash x := \texttt{new array[int]}(a) : \text{Cmd}}{}
-% \]
-\[
+\and
 \inference[\textsc{T-ADecl-Int}]
     {}
     {\Gamma \vdash\texttt{array[int]} : \text{\text{Array}}[\text{Nat}]}{}
-\]
-\[
+\and
 \inference[\textsc{T-ADecl-Arr}]
     {\Gamma \vdash array\_decl : t}
     {\Gamma \vdash \texttt{array}[array\_decl] : \text{\text{Array}}[t]}{}
-\]
-\[
+\and
 \inference[\textsc{T-ADecl}]
     {x : t \in \Gamma \quad \Gamma \vdash arr\_decl : t \quad \Gamma \vdash a : \text{Nat}}
     {\Gamma \vdash x := \texttt{new }arr\_decl(a) : \text{Cmd}}{}
-\]
-\[
+\and
 \inference[\textsc{T-AUpdate}]
     {x : \text{Array}[t] \in \Gamma \quad \Gamma \vdash a_1 : \text{Nat} \quad \Gamma \vdash a_2 : t}
     {\Gamma \vdash x[a_1] := a_2 : \text{Cmd}}{}
-\]
+\end{mathpar}
 \end{document}
