@@ -282,7 +282,7 @@ T  & ::= \text{Bool}\ |\ \text{Cmd}\ |\ T'
 
 What we do not guarantee:
 We cannot guarantee a non blocking execution if the program is well typed because we chose to initialize arrays of arrays to \(nil\).
-It is not possible to guarantee that a reference is not \(nil\) with a type system. This would require a static analysis dataflow analysis.
+It is not possible to guarantee that a reference is not \(nil\) with a type system. This would require a static dataflow analysis.
 Therefore we cannot guarantee that the program does not try to dereference a \(nil\) reference, we only check this at runtime in the Aexp evaluation and then block the execution.
 
 Even if we choose to initialize arrays of arrays directly (\texttt{new array[array[int]](10)} would then return an \(10 \times 10\) array), and to not consider \(nil\) references, we would not have the guarantee that the program is non blocking because we cannot guarantee the absence of  array overflows or underflows. This guarantee would also require a dataflow analysis.
@@ -315,7 +315,7 @@ Then, the typing rules for arithmetic expressions:
 \[
 \inference[\textsc{T-Len}]
     {x : \text{Array}[t] \in \Gamma}
-    {\Gamma \vdash x : \text{Nat}}{}
+    {\Gamma \vdash x.length : \text{Nat}}{}
 \]
 \[
 \inference[\textsc{T-Deref}]
