@@ -117,8 +117,10 @@ There would be more blocking configurations because some rules of the big step-s
 % determining the potential may-aliases at each program point. You may want to use the allocation site of
 % an array as abstraction but other abstract domains for modeling memory allocation are also welcome. The
 % allocation site of an array is the label of the new instruction that created it.
+In this section, we propose a dataflow analysis for determining the potential may-aliases at each program point. We use the allocation site of array as an abstraction, which we represent as the label of the instruction that allocated it.
 
-We enrich the syntax of the \texttt{While} language with labels:
+\paragraph{Control Flow}
+The syntax of the \texttt{While} language is extended with labels, representing program points:
 \begin{equation*} \label{eq1}
 \begin{split}
 S::= & [x := a]^l
@@ -131,17 +133,16 @@ S::= & [x := a]^l
 & n \in \textbf{Num}, x \in \textbf{Var}, a \in \textbf{Aexp}, b \in \textbf{Bexp}, S \in \textbf{Comm}, l \in \textbf{Lab}
 \end{split}
 \end{equation*}
-
-For each instruction \(S \in \textbf{Comm}\), we associate:
+For each instruction \(S \in \textbf{Comm}\), we associate the following functions to represent the control flow graph of the program:
 \begin{center}
 \begin{tabular}{ l l l }
 \(init(S)\) & \(\in \textbf{Lab}\) &  \textit{the entry point label of S}\\
 \(final(S)\) & \(\subseteq \textbf{Lab}\) &  \textit{the exit point labels of S}\\
 \(labels(S)\) & \(\subseteq \textbf{Lab}\) &  \textit{the labels which appear in S}\\
-\(flow(S)\) & \(\subseteq \textbf{Lab} \times \textbf{Lab}\) &  \textit{the edged of the control flow graph}
+\(flow(S)\) & \(\subseteq \textbf{Lab} \times \textbf{Lab}\) &  \textit{the edges of the control flow graph}
 \end{tabular}
 \end{center}
-which are defined as follow:
+which are defined as follow\footnote{Note that these definitions are just an extension of the definitions presented in the course with the new commands to manipulate arrays.}:
 \begin{center}
 \begin{tabular}{ l l }
 \( init([x := a]^l) \)                                           & \( = l\)\\
@@ -190,49 +191,55 @@ which are defined as follow:
 \end{tabular}
 \end{center}
 
+\paragraph{May-Aliases Analysis}
+In our may-aliases (MA) analysis, the allocation site of an array is used as an abstraction; for each array we keep track of their ``reachable'' allocation sites.
 An allocation is represented by a couple \((v,l) \in \textbf{Var} \times \textbf{Lab}^\textbf{?}\)
-with \(\textbf{Lab}^\textbf{?} = \textbf{Lab} \cup \{?\}\).
+with \(\textbf{Lab}^\textbf{?} = \textbf{Lab} \cup \{?\}\), such that:
 \begin{itemize}
  \item \((v,l)\) : The array \(v\) has been allocated a program point \(l\).
  \item (v,?) : The array \(v\) is not allocated.
 \end{itemize}
-At each label l, we compute the two sets:
+At each label program point \(l\), we compute the two following sets:
 \begin{itemize}
  \item \(M\!A_\text{in}(l)\), the allocated arrays that enter in \(l\)
  \item \(M\!A_\text{out}(l)\), the allocated arrays that exit from \(l\)
 \end{itemize}
-
-The ``gen-kill'' rules for the MA analysis are the following:
+The ``gen-kill'' rules for the MA analysis define which allocations are created and which are killed at each command:
 \begin{center}
 \begin{tabular}{ l l l l}
-\( kill([x := a]^l) \)      & = & \( \{(x,l')\ |\ l' \in \textbf{Lab}^?\} \) & \textit{kill any previous alloc. of x}\\ 
-\( kill([\text{skip}]^l) \) & = & \( \emptyset \) \\
-\( kill([b]^l) \)           & = & \( \emptyset \) \\
-\( kill([x := \text{new } arr\_decl(a)]^l) \) & = & \( \{(x,l')\ |\ l' \in \textbf{Lab}^?\} \) & \textit{kill any previous alloc. of x}\\ 
-\( kill([x[a_1] := a_2]^l) \) & = & \(\emptyset\)
+\(1.\ kill([x := a]^l) \)      & = & \( \{(x,l')\ |\ l' \in \textbf{Lab}^?\} \) & \textit{kill any previous alloc. of x}\\ 
+\(2.\ kill([\text{skip}]^l) \) & = & \( \emptyset \) \\
+\(3.\ kill([b]^l) \)           & = & \( \emptyset \) \\
+\(4.\ kill([x := \text{new } arr\_decl(a)]^l) \) & = & \( \{(x,l')\ |\ l' \in \textbf{Lab}^?\} \) & \textit{kill any previous alloc. of x}\\ 
+\(5.\ kill([x[a_1] := a_2]^l) \) & = & \(\emptyset\)
 \end{tabular}
 \end{center}
+In the rule 1, we assign a new value to \(x\), therefore any previous allocation of \(x\) becomes non-reachable and all its allocation sites are removed from MA; the same reasoning holds for rule 4.
+In rule 5, we would want to remove from MA the previous allocation sites reachable from \(x[a_1]\), however in our analysis they cannot be distinguished from the allocation sites reachable from \(x[a_2]\) or even from \(x\). Therefore we do nothing and keep these potentially non-reachable allocation sites in MA, and get an over approximation.
 \begin{center}
 \begin{tabular}{ l l l }
-\( gen([x_1 := x_2]^l) \)    & =  \( (x_1,l')\ |\ (x_2,l') \in  M\!A_\text{in}(l) \)
+\(1.\ gen([x_1 := x_2]^l) \)    & =  \( (x_1,l')\ |\ (x_2,l') \in  M\!A_\text{in}(l) \)
                              & \textit{add any allocation reachable via \(x_2\) }\\
-\( gen([x_1 := x_2[a]]^l) \) & =  \( (x_1,l')\ |\ (x_2,l') \in  M\!A_\text{in}(l) \)
+\(2.\ gen([x_1 := x_2[a]]^l) \) & =  \( (x_1,l')\ |\ (x_2,l') \in  M\!A_\text{in}(l) \)
                              & \textit{add any allocation reachable via \(x_2\) }\\ 
-\( gen([x := a]^l) \)        & =  \( \emptyset \)
+\(3.\ gen([x := a]^l) \)        & =  \( \emptyset \)
                              & \textit{if \(a_2\) is not a variable}\\ 
-\( gen([\text{skip}]^l) \)   & =  \( \emptyset \) \\
-\( gen([b]^l) \)             & =  \( \emptyset \) \\
+\(4.\ gen([\text{skip}]^l) \)   & =  \( \emptyset \) \\
+\(5.\ gen([b]^l) \)             & =  \( \emptyset \) \\
 
-\( gen([x := \text{new } arr\_decl(a)]^l) \) & =  \( \{(x,l)\} \) & \textit{create new alloc. for x}\\
+\(6.\ gen([x := \text{new } arr\_decl(a)]^l) \) & =  \( \{(x,l)\} \) & \textit{create new alloc. for x}\\
 
-\( gen([x_1[a] := x_2]^l) \)        & =  \( (x_1,l')\ |\ (x_2,l') \in  M\!A_\text{in}(l) \)
+\(7.\ gen([x_1[a] := x_2]^l) \)        & =  \( (x_1,l')\ |\ (x_2,l') \in  M\!A_\text{in}(l) \)
                                     & \textit{add any allocation reachable via \(x_2\) }\\
-\( gen([x_1[a_1] := x_2[a_2]]^l) \) & =  \( (x_1,l')\ |\ (x_2,l') \in  M\!A_\text{in}(l) \)
+\(8.\ gen([x_1[a_1] := x_2[a_2]]^l) \) & =  \( (x_1,l')\ |\ (x_2,l') \in  M\!A_\text{in}(l) \)
                                     & \textit{add any allocation reachable via \(x_2\) }\\ 
-\( gen([x[a_1] := a_2]^l) \)        & =  \( \emptyset \)
+\(9.\ gen([x[a_1] := a_2]^l) \)        & =  \( \emptyset \)
                                     & \textit{if \(a_2\) is not a variable}\\
 \end{tabular}
 \end{center}
+In the rule 1, any allocation site previously reachable via \(x_2\) becomes also reachable via \(x_1\); the same reasoning holds for rule 2, 7 and 8.
+In the rules 7 and 8, we make an over-approximation because we do not differentiate the allocation sites reachable from \(x_1\) from those reachable from \(x_1[a]\) or those reachable from \(x_1[a']\).
+In the rule 6, we allocate a fresh array to the variables \(x\), thus we add the current label in MA as the allocation site of \(x\).
 
 For all program point \([i]^l \in P\), we compute the sets \(M\!A_\text{in}(l)\) and \(M\!A_\text{out}(l)\):
  \[
