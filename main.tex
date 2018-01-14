@@ -199,11 +199,12 @@ with \(\textbf{Lab}^\textbf{?} = \textbf{Lab} \cup \{?\}\), such that:
  \item \((v,l)\) : The array \(v\) has been allocated a program point \(l\).
  \item (v,?) : The array \(v\) is not allocated.
 \end{itemize}
-At each label program point \(l\), we compute the two following sets:
+At each label program point \(l\), we compute the sets \(M\!A_\text{in}(l), M\!A_\text{out}(l) \in \mathcal{P}(\textbf{Var} \times \textbf{Lab}^?)\) such that:
 \begin{itemize}
  \item \(M\!A_\text{in}(l)\), the allocated arrays that enter in \(l\)
  \item \(M\!A_\text{out}(l)\), the allocated arrays that exit from \(l\)
 \end{itemize}
+
 The ``gen-kill'' rules for the MA analysis define which allocations are created and which are killed at each command:
 \begin{center}
 \begin{tabular}{ l l l l}
@@ -241,7 +242,7 @@ In the rule 1, any allocation site previously reachable via \(x_2\) becomes also
 In the rules 7 and 8, we make an over-approximation because we do not differentiate the allocation sites reachable from \(x_1\) from those reachable from \(x_1[a]\) or those reachable from \(x_1[a']\).
 In the rule 6, we allocate a fresh array to the variables \(x\), thus we add the current label in MA as the allocation site of \(x\).
 
-For all program point \([i]^l \in P\), we compute the sets \(M\!A_\text{in}(l)\) and \(M\!A_\text{out}(l)\):
+Finally, we compute the sets \(M\!A_\text{in}(l)\) and \(M\!A_\text{out}(l)\) for all program point \([i]^l \in P\) :
  \[
     M\!A_\text{in}(l) =
     \begin{cases}
@@ -249,9 +250,13 @@ For all program point \([i]^l \in P\), we compute the sets \(M\!A_\text{in}(l)\)
       \bigcup\limits_{(l,l') \in flow(P)} M\!A_\text{out}(l'), & \text{otherwise}
     \end{cases}
 \]
+At the beginning of the program, all the variables are set to unallocated. Since MA analysis is a forward analysis
 \[
     M\!A_\text{out}(l) = M\!A_\text{in}(l) \setminus kill([i]^l) \cup gen([i]^l)
 \]
+We can note that MA is a {\em forward} analysis, defining something that {\em may} happen: we are considering the least-fixpoint.
+The least fixpoint exists because the functions \(M\!A_\text{in}(l)\) and \(M\!A_\text{out}(l)\) are monotonically increasing.
+Moreover, the fixpoint iteration terminates because the lattice used for MA (\(\mathcal{P}(\textbf{Var} \times \textbf{Lab}^?), \subseteq, \cup\)) is finite.
 
 \section*{Question 4}
 Imprecisions:
