@@ -263,7 +263,138 @@ This constitutes an over-approximation in the analysis.
 
 Updating an array with a reference: \( kill([x[a_1] := a_2]^l) \)  might override an allocation labeled l, which is no longer reachable via x, but we cannot know so we keep (x,l) in the list.
 
+Improvements:
+
+
 \section*{Question 5}
+\paragraph{Definition of types}
+The definition of types we consider in our program are booleans, integers and multidimensional arrays of integers. We define a particular type for the commands. Therefore, we define the types \(T\) as:
+\begin{equation*} \label{eq1}
+\begin{split}
+T' & ::= \text{Nat}\ |\ \text{Array}[T']\\
+T  & ::= \text{Bool}\ |\ \text{Cmd}\ |\ T'
+\end{split}
+\end{equation*}
+
+\paragraph{Guarantees}
+\todo{What we guarantee:}
 
 
+What we do not guarantee:
+We cannot guarantee a non blocking execution if the program is well typed because we chose to initialize arrays of arrays to \(nil\).
+It is not possible to guarantee that a reference is not \(nil\) with a type system. This would require a static analysis dataflow analysis.
+Therefore we cannot guarantee that the program does not try to dereference a \(nil\) reference, we only check this at runtime in the Aexp evaluation and then block the execution.
+
+Even if we choose to initialize arrays of arrays directly (\texttt{new array[array[int]](10)} would then return an \(10 \times 10\) array), and to not consider \(nil\) references, we would not have the guarantee that the program is non blocking because we cannot guarantee the absence of  array overflows or underflows. This guarantee would also require a dataflow analysis.
+
+\paragraph{Typing Rules}
+We define the type judgment \(\Gamma \vdash S\) meaning that the command \(S\) is well-typed in the context \(\Gamma\) with the following typing rules:
+
+First we define the typing rules for values:
+\[
+\textsc{T-Nat} \quad \Gamma \vdash n : \text{Nat}
+\]
+\[
+\textsc{T-True} \quad \Gamma \vdash true : \text{Bool}
+\]
+\[
+\textsc{T-False} \quad \Gamma \vdash false : \text{Bool} 
+\]
+
+Then, the typing rules for arithmetic expressions:
+\[
+\inference[\textsc{T-Var}]
+    {x : t \in \Gamma}
+    {\Gamma \vdash x : t}{}
+\]
+\[
+\inference[\textsc{T-Aop}]
+    {\Gamma \vdash a_1 : \text{Nat} \quad \Gamma \vdash a_2 : \text{Nat}}
+    {\Gamma \vdash a_1 \circ a_2 : \text{Nat}}{(\circ \in \{+, -,\times\})}
+\]
+\[
+\inference[\textsc{T-Len}]
+    {x : \text{Array}[t] \in \Gamma}
+    {\Gamma \vdash x : \text{Nat}}{}
+\]
+\[
+\inference[\textsc{T-Deref}]
+    {x : \text{Array}[t] \in \Gamma \quad \Gamma \vdash a : \text{Nat}}
+    {\Gamma \vdash  x[a] : t}{}
+\]
+
+Then the typing rules for boolean expressions:
+
+\[
+\inference[\textsc{T-Comp}]
+    {\Gamma \vdash a_1 : \text{Nat} \quad \Gamma \vdash a_2 : \text{Nat}}
+    {\Gamma \vdash a_1 \circ a_2 : \text{Bool}}{(\circ \in \{=, \leq\})}
+\]
+\[
+\inference[\textsc{T-Not}]
+    {\Gamma \vdash b : \text{Bool}}
+    {\Gamma \vdash \texttt{not } b : \text{Bool}}{}
+\]
+\[
+\inference[\textsc{T-Or}]
+    {\Gamma \vdash b_1 : \text{Bool} \quad \Gamma \vdash b_2 : \text{Bool}}
+    {\Gamma \vdash  b_1 \texttt{ or } b_2 : \text{Bool}}{}
+\]
+\[
+\inference[\textsc{T-And}]
+    {\Gamma \vdash b_1 : \text{Bool} \quad \Gamma \vdash b_2 : \text{Bool}}
+    {\Gamma \vdash  b_1 \texttt{ and } b_2 : \text{Bool}}{}
+\]
+
+Finally, we define the typing rules for commands:
+\[
+\inference[\textsc{T-Assign}]
+    {x : t \in \Gamma \quad \Gamma \vdash a : t}
+    {\Gamma \vdash  x := a : \text{Cmd}}{}
+\]
+\[
+\inference[\textsc{T-Skip}]
+    {}
+    {\Gamma \vdash \texttt{skip} : \text{Cmd}}{}
+\]
+\[
+\inference[\textsc{T-Seq}]
+    {\Gamma \vdash S_1 : \text{Cmd} \quad \Gamma \vdash S_2 : \text{Cmd}}
+    {\Gamma \vdash S_1; S_2 : \text{Cmd}}{}
+\]
+\[
+\inference[\textsc{T-If}]
+    {\Gamma \vdash b : Bool \quad \Gamma \vdash S_1 : \text{Cmd} \quad \Gamma \vdash S_2 : \text{Cmd}}
+    {\Gamma \vdash \texttt{if } b \texttt{ then } S_1 \texttt{ else } S_2 : \text{Cmd}}{}
+\]
+\[
+\inference[\textsc{T-While}]
+    {\Gamma \vdash b : Bool \quad \Gamma \vdash S : \text{Cmd}}
+    {\Gamma \vdash \texttt{while } b \texttt{ do } S : \text{Cmd}}{}
+\]
+% \[
+% \inference[\textsc{T-ADecl-Int}]
+%     {x : \text{Array}[int] \in \Gamma \quad \Gamma \vdash a : \text{Nat}}
+%     {\Gamma \vdash x := \texttt{new array[int]}(a) : \text{Cmd}}{}
+% \]
+\[
+\inference[\textsc{T-ADecl-Int}]
+    {}
+    {\Gamma \vdash\texttt{array[int]} : \text{\text{Array}}[\text{Nat}]}{}
+\]
+\[
+\inference[\textsc{T-ADecl-Arr}]
+    {\Gamma \vdash array\_decl : t}
+    {\Gamma \vdash \texttt{array}[array\_decl] : \text{\text{Array}}[t]}{}
+\]
+\[
+\inference[\textsc{T-ADecl}]
+    {x : t \in \Gamma \quad \Gamma \vdash arr\_decl : t \quad \Gamma \vdash a : \text{Nat}}
+    {\Gamma \vdash x := \texttt{new }arr\_decl(a) : \text{Cmd}}{}
+\]
+\[
+\inference[\textsc{T-AUpdate}]
+    {x : \text{Array}[t] \in \Gamma \quad \Gamma \vdash a_1 : \text{Nat} \quad \Gamma \vdash a_2 : t}
+    {\Gamma \vdash x[a_1] := a_2 : \text{Cmd}}{}
+\]
 \end{document}
