@@ -207,7 +207,7 @@ At each label program point \(l\), we compute the sets \(M\!A_\text{in}(l), M\!A
  \item \(M\!A_\text{in}(l)\), the allocated arrays that enter in \(l\)
  \item \(M\!A_\text{out}(l)\), the allocated arrays that exit from \(l\)
 \end{itemize}
-Finally, we define the relation \(x \sim_{M\!A(l)} x'\) stating that two memory access via \(x\) and \(x'\) may have the same target at point \(l\), such that:
+Finally, we define the relation \(x \sim_{M\!A(l)} x'\) stating that two memory accesses via \(x\) and \(x'\) may have the same target at point \(l\), such that:
 \[x \sim_{M\!A(l)} x' \iff [x = x' \quad \vee \quad (\exists l'.\ (x,l') \in M\!A(l) \wedge (x',l') \in M\!A(l)) ]
 \]
 
