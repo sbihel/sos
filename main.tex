@@ -28,9 +28,10 @@ numbers=left
 \begin{document}
 \maketitle
 
-\section*{Question 1 - v1}
+\section*{Question 1}
 %------------------------ Part 1
-Let \(\mathcal{N}\) be the interpretation function for constants:
+\paragraph{State domain}
+Let \(\mathcal{N}\) be the interpretation function for constants, mapping numeric:
 \[ \mathcal{N} = Num \rightarrow \mathbb{Z} \]
 In our extended \texttt{While} language, values are either integers or arrays, thus we define the set of program values:
 \[ \textbf{Val} = \mathbb{Z} \cup \textbf{Arr}\]
@@ -40,6 +41,7 @@ Finally, a state is represented by a function from program variables to values:
 \[\sigma \in \textbf{State} = \textbf{Var} \rightarrow \textbf{Val} \]
 
 %------------------------ Part 2
+\paragraph{Denotational semantics of expressions}
 Arithmetic expressions are extended from integers to integers or arrays.
 The denotational semantic of arithmetic expressions is defined by the following rules:
 \begin{center}
@@ -85,7 +87,9 @@ The denotational semantic of boolean expressions is defined by the following rul
 Note that  \(\mathcal{B}\llbracket a_1 \circ a_2 \rrbracket \sigma \) is not defined if \(a_1\) and \(a_2\) are not integers.
 Consequently, some rules parameterized by booleans expressions in the small-step semantic might be blocking on undefined booleans expressions.
 
-The structural operational semantics (small-step) comprises all the previous rules plus the following extension:
+
+\paragraph{Small-step semantics of commands}
+The structural operational semantics (small-step) includes all the previous rules plus the following extension:
 \begin{mathpar}
 \inference[ARR\_DECL\_I]{}{(x := \text{new array[int]}(a), \sigma) \rightarrow
 \sigma[x \mapsto x(i) = 0, \forall i \in [0 .. (a-1)] ]}
@@ -104,7 +108,6 @@ The array declaration is split into two rules:
  \item \textsc{Arr\_Decl\_A} is the declaration of arrays of arrays. The arrays \(x\) is initialized as a function mapping indexes (from 0 to \(a-1\)), to \(nil\).
 \end{itemize}
 The \textsc{Arr\_Update} is conditioned by the fact that the index \(a_1\) is in the bound of the array. \textsc{Arr\_Update} consists in updating the function \(\sigma x\) by mapping the index \(a_1\) to its new value \(a_2\), and then updating the store \(\sigma\) with the new value of \(\sigma x\).
-
 
 \section*{Question 2}
 The definition of the big-step semantic would not change, except for the addition of the above rules that would be straightforward.
