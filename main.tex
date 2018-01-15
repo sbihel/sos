@@ -269,15 +269,19 @@ Moreover, the fixpoint iteration terminates because the lattice used for MA (\(\
 The MA analysis defined in Question 3 is subject to some imprecisions. It is an over-approximation of the real behavior of the program and thus contains false positive.
 
 First, some infeasible paths might cause a may alias which is impossible in practice.
-For instance, the MA analysis of the program in Listing \ref{code:infeasible} detects a may-alias between \(z\) and \(y\) when both conditional statements are evaluated to true, which is not possible in practice.
-\todo{Find an example with a program where the type of variables cannot change ?}
+For instance, the MA analysis of the program in Listing \ref{code:infeasible} detects a may-alias between \(z\) and \(y\) since both can reach the allocation \(l_1\) according to the analysis, which is not possible in practice.
 Improving the analysis on this point would require a {\em path-sensitive} analysis, able to infer properties on branches which our analysis is unable to do. 
 \begin{lstlisting}[caption=Example of infeasible execution path causing a may aliasis., label=code:infeasible]
-z = 0;
-if(x < 0)
-  z = new array[int](10);
-if(x > 0)
-  y = z; // Triggers a may alias but actually there is none.
+y = new array[array[int]](10) // MA = {(y,l1)} 
+z = new array[array[int]](10) // MA = {(y,l1), (z,l2)}
+if(b)
+  x = y                       // MA = {(y,l1), (z,l2), (x,l1)}
+else
+  x = z;                      // MA = {(y,l1), (z,l2), (x,l2)}
+                              // MA = {(y,l1), (z,l2), (x,l2), (x,l1)}
+if(!b)
+  x[2] = z[2];                // MA = {(y,l1), (z,l2), (x,l2), (x,l1), (y, l2)}
+  
 \end{lstlisting}
 
 Second, our analysis do not differentiate allocations reachable via \(x\) and allocations reachable via \(x[i]\); in both cases, we consider that the allocation site is reachable via \(x\) and add \((x,l)\).
