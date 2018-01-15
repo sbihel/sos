@@ -259,23 +259,26 @@ The least fixpoint exists because the functions \(M\!A_\text{in}(l)\) and \(M\!A
 Moreover, the fixpoint iteration terminates because the lattice used for MA (\(\mathcal{P}(\textbf{Var} \times \textbf{Lab}^?), \subseteq, \cup\)) is finite.
 
 \section*{Question 4}
-Imprecisions:
+The MA analysis defined in Question 3 is subject to some imprecisions. It is an over-approximation of the real behavior of the program and thus contains false positive.
 
-Conditional statements, because unreachable 
-\begin{lstlisting}
+First, some infeasible paths might cause a may alias which is impossible in practice.
+For instance, the MA analysis of the program in Listing \ref{code:infeasible} detects a may-alias between \(z\) and \(y\) when both conditional statements are evaluated to true, which is not possible in practice.
+\todo{Find an example with a program where the type of variables cannot change ?}
+\begin{lstlisting}[caption=Example of infeasible execution path causing a may aliasis., label=code:infeasible]
+z = 0;
 if(x < 0)
-  x = new array[int](10)
+  z = new array[int](10);
 if(x > 0)
-  y = x // Triggers a may alias but actually there is none.
+  y = z; // Triggers a may alias but actually there is none.
 \end{lstlisting}
 
-We do not differentiate allocations reachable via \(x\) and allocations reachable via \(x[i]\), in both case, we add the allocation as \((x,l)\).
-Moreover in case of an assignment \([x_1 := x_2[a]]^l\) where \(x_2\) is an array of integers, we add its reachable expressions to \(x_1\) although it is not necessary.
+Second, our analysis do not differentiate allocations reachable via \(x\) and allocations reachable via \(x[i]\); in both cases, we consider that the allocation site is reachable via \(x\) and add \((x,l)\).
+Moreover in case of an assignment \([x_1 := x_2[a]]^l\), we add to \(x_1\) all the reachable assignments from to \(x_2\), although we would like to add only those reachable from \(x_2[a]]^l\).
 This constitutes an over-approximation in the analysis.
 
-Updating an array with a reference: \( kill([x[a_1] := a_2]^l) \)  might override an allocation labeled l, which is no longer reachable via x, but we cannot know so we keep (x,l) in the list.
+Finally, when updating an array with a reference \([x[a_1] := a_2]^l\) might override the allocation reachable from \(x[a_1]\) which would be no longer reachable via \(x\), but we cannot identify them and remove them from MA.
 
-Improvements:
+\todo{Improvements:}
 
 
 \section*{Question 5}
