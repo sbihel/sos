@@ -204,6 +204,9 @@ At each label program point \(l\), we compute the sets \(M\!A_\text{in}(l), M\!A
  \item \(M\!A_\text{in}(l)\), the allocated arrays that enter in \(l\)
  \item \(M\!A_\text{out}(l)\), the allocated arrays that exit from \(l\)
 \end{itemize}
+Finally, we define the relation \(x \sim_{M\!A(l)} x'\) stating that two memory access via \(x\) and \(x'\) may have the same target at point \(l\), such that:
+\[x \sim_{M\!A(l)} x' \iff [x = x' \quad \vee \quad (\exists l'.\ (x,l') \in M\!A(l) \wedge (x',l') \in M\!A(l)) ]
+\]
 
 The ``gen-kill'' rules for the MA analysis define which allocations are created and which are killed at each command:
 \begin{center}
@@ -219,9 +222,9 @@ In the rule 1, we assign a new value to \(x\), therefore any previous allocation
 In rule 5, we would want to remove from MA the previous allocation sites reachable from \(x[a_1]\), however in our analysis they cannot be distinguished from the allocation sites reachable from \(x[a_2]\) or even from \(x\). Therefore we do nothing and keep these potentially non-reachable allocation sites in MA, and get an over approximation.
 \begin{center}
 \begin{tabular}{ l l l }
-\(1.\ gen([x_1 := x_2]^l) \)    & =  \( (x_1,l')\ |\ (x_2,l') \in  M\!A_\text{in}(l) \)
-                             & \textit{add any allocation reachable via \(x_2\) }\\
-\(2.\ gen([x_1 := x_2[a]]^l) \) & =  \( (x_1,l')\ |\ (x_2,l') \in  M\!A_\text{in}(l) \)
+\(1.\ gen([x_1 := x_2]^l) \)    & =  \( \{(x_1,l')\ |\ (x_2,l') \in  M\!A_\text{in}(l)\} \)
+                             & \textit{add any allocation reachable via \(x_2\)}\\
+\(2.\ gen([x_1 := x_2[a]]^l) \) & =  \( \{(x_1,l')\ |\ (x_2,l') \in  M\!A_\text{in}(l) \}\)
                              & \textit{add any allocation reachable via \(x_2\) }\\ 
 \(3.\ gen([x := a]^l) \)        & =  \( \emptyset \)
                              & \textit{if \(a_2\) is not a variable}\\ 
@@ -230,17 +233,17 @@ In rule 5, we would want to remove from MA the previous allocation sites reachab
 
 \(6.\ gen([x := \text{new } arr\_decl(a)]^l) \) & =  \( \{(x,l)\} \) & \textit{create new alloc. for x}\\
 
-\(7.\ gen([x_1[a] := x_2]^l) \)        & =  \( (x_1,l')\ |\ (x_2,l') \in  M\!A_\text{in}(l) \)
-                                    & \textit{add any allocation reachable via \(x_2\) }\\
-\(8.\ gen([x_1[a_1] := x_2[a_2]]^l) \) & =  \( (x_1,l')\ |\ (x_2,l') \in  M\!A_\text{in}(l) \)
-                                    & \textit{add any allocation reachable via \(x_2\) }\\ 
+\(7.\ gen([x_1[a] := x_2]^l) \)        & =  \( \{(x',l')\ |\ x_1 \sim_{M\!A_{\text{in}}(l)} x' \wedge (x_2,l') \in  M\!A_\text{in}(l) \}\)
+                                    & \textit{\(x_2\) is reachable via any alias of \(x_1\)}\\
+\(8.\ gen([x_1[a_1] := x_2[a_2]]^l) \) & =  \( \{(x',l')\ |\ x_1 \sim_{M\!A_{\text{in}}(l)} x' \wedge (x_2,l') \in  M\!A_\text{in}(l) \}\)
+                                    & \textit{\(x_2\) is reachable via any alias of \(x_1\)}\\ 
 \(9.\ gen([x[a_1] := a_2]^l) \)        & =  \( \emptyset \)
                                     & \textit{if \(a_2\) is not a variable}\\
 \end{tabular}
 \end{center}
-In the rule 1, any allocation site previously reachable via \(x_2\) becomes also reachable via \(x_1\); the same reasoning holds for rule 2, 7 and 8.
-In the rules 7 and 8, we make an over-approximation because we do not differentiate the allocation sites reachable from \(x_1\) from those reachable from \(x_1[a]\) or those reachable from \(x_1[a']\).
+In the rule 1, any allocation site previously reachable via \(x_2\) becomes also reachable via \(x_1\); the same reasoning holds for rule 2. 
 In the rule 6, we allocate a fresh array to the variables \(x\), thus we add the current label in MA as the allocation site of \(x\).
+In the rules 7 and 8, any allocation site previously reachable via \(x_2\) becomes also reachable via \(x_1\) but also via all the aliases of \(x_1\). Here, we make an over-approximation because we do not differentiate the allocation sites reachable from \(x_1\) from those reachable from \(x_1[a]\) or those reachable from \(x_1[a']\).
 
 Finally, we compute the sets \(M\!A_\text{in}(l)\) and \(M\!A_\text{out}(l)\) for all program point \([i]^l \in P\) :
  \[
