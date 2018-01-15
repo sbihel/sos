@@ -35,10 +35,12 @@ Let \(\mathcal{N}\) be the interpretation function for constants, mapping numeri
 \[ \mathcal{N} = Num \rightarrow \mathbb{Z} \]
 In our extended \texttt{While} language, values are either integers or arrays, thus we define the set of program values:
 \[ \textbf{Val} = \mathbb{Z} \cup \textbf{Arr}\]
-We define the set of arrays as the set of all functions from indexes (natural numbers) to program values, plus the value \(nil\) for undefined arrays: \note{We could define the set of array as the set of finite sequences of values, it might be more readable/easier to understand...}
+We define the set of arrays as the set of all functions from indexes (natural numbers) to program values, plus the value \(nil\) for undefined arrays:
 \[\textbf{Arr} = \{x:\mathbb{N} \rightarrow \textbf{Val}\} \cup \{nil\} \]
 Finally, a state is represented by a function from program variables to values:
 \[\sigma \in \textbf{State} = \textbf{Var} \rightarrow \textbf{Val} \]
+
+Another option would have been to keep a set of local variables mapping variables to values (references or integers), and a heap mapping references and indexes to values. The state would then be composed of the set of local variables and the heap. Contrary to the method we adopted, this option would require to adapt every instruction to handle both parts of the state (local variables and heap).
 
 %------------------------ Part 2
 \paragraph{Denotational semantics of expressions}
@@ -58,6 +60,8 @@ The denotational semantic of arithmetic expressions is defined by the following 
     & & then \(\sigma x (\mathcal{A}\llbracket a\rrbracket \sigma)\)
 \end{tabular}
 \end{center}
+Note that the evaluation of arithmetic expressions is not a total function.
+Some combinations of expressions and states cannot be evaluated because they are erroneous (for instance dereferencing an integer is not possible). When this happen, we consider that the execution blocks.
 Note the following changes from the definition of the while language:
 \begin{itemize}
 \item \(\mathcal{A}\llbracket x \rrbracket \sigma \) can now return an integer or an array.
@@ -85,8 +89,7 @@ The denotational semantic of boolean expressions is defined by the following rul
 \end{tabular}
 \end{center}
 Note that  \(\mathcal{B}\llbracket a_1 \circ a_2 \rrbracket \sigma \) is not defined if \(a_1\) and \(a_2\) are not integers.
-Consequently, some rules parameterized by booleans expressions in the small-step semantic might be blocking on undefined booleans expressions.
-
+Consequently, some rules parameterized by booleans expressions in the small-step semantic might be blocking because of those undefined booleans expressions.
 
 \paragraph{Small-step semantics of commands}
 The structural operational semantics (small-step) includes all the previous rules plus the following extension:
@@ -107,13 +110,13 @@ The array declaration is split into two rules:
  \item \textsc{Arr\_Decl\_I} is the declaration of arrays of integers. The arrays \(x\) is initialized as a function mapping indexes (from 0 to \(a-1\)), to 0.
  \item \textsc{Arr\_Decl\_A} is the declaration of arrays of arrays. The arrays \(x\) is initialized as a function mapping indexes (from 0 to \(a-1\)), to \(nil\).
 \end{itemize}
-The \textsc{Arr\_Update} is conditioned by the fact that the index \(a_1\) is in the bound of the array. \textsc{Arr\_Update} consists in updating the function \(\sigma x\) by mapping the index \(a_1\) to its new value \(a_2\), and then updating the store \(\sigma\) with the new value of \(\sigma x\).
+The \textsc{Arr\_Update} is conditioned by the fact that the index \(a_1\) is in the bound of the array. \textsc{Arr\_Update} consists in updating the function \(\sigma x\) by mapping the index \(a_1\) to the new value \(a_2\), and then updating the store \(\sigma\) with the new value of \(\sigma x\).
 
 \section*{Question 2}
 The definition of the big-step semantic would not change, except for the addition of the above rules that would be straightforward.
 Indeed, the rules defined above do not manipulate commands, so their translation into big-step semantic only consists in changing the transition relation from small-step to big-step.
 
-There would be more blocking configurations because some rules of the big step-semantic are parameterized by a boolean evaluation which can be undefined (to avoid the comparison of arrays) in our extended semantic contrary to the original semantic.
+Compared to the original semantic, there would be more blocking configurations because some rules of the big step-semantic are parameterized by a boolean evaluation which can be undefined (to avoid the comparison of arrays) in our extended semantic.
 
 \section*{Question 3}
 % Question 3. We suppose that all instructions are given a unique label. Propose a data-flow analysis for
