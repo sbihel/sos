@@ -304,7 +304,7 @@ First, this option would have been easier/more intuitive to design.
 Second it would have given us an easy way to differentiate what allocation sites are reachable via \(x\) (which would lie in \(\textbf{PtV}(x)\)) from what is reachable via \(x[a]\) (which would lie in \(\{\textbf{PtF}(h)\ |\ h \in \textbf{PtV}(x)\}\)).
 However, our analysis has the advantage of being {\em flow-sensitive} and take the order of the statements into account, contrary to the {\em points-to} analysis presented in class.
 
-To differentiate what allocation sites are reachable via \(x[a_1]\) from those reachable via \(x[a_2]\), we would need to know the values of arithmetic expression statically, which is undecidable in the general case. \fixme{Is it ?} However a little improvement would be to make the difference when it is possible, for instance when the arithmetic expression is a constant.
+To differentiate what allocation sites are reachable via \(x[a_1]\) from those reachable via \(x[a_2]\), we would need to know the values of arithmetic expression, which would fall out of the scope of our static analysis. However a little improvement would be to make the difference when it is possible, for instance when the arithmetic expression is a constant.
 
 \section*{Question 5}
 \paragraph{Definition of types}
